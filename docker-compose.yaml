@@ -1,0 +1,64 @@
+version: '3.9'
+
+volumes: # named volumes can be managed easier using docker-compose
+  mysql-volume:
+  postgres-volume:
+
+networks: # defining user defined network adds DNS by name of the service resolver for your services
+  lab-bridge-network:
+    driver: bridge
+  lab-host-network: # Directly connected to host network and no need to expose ports. Useful for VPN: Wire guard or Kamailio
+    driver: host # driver means network type
+  lab-macvlan-network: # Directly connected to router and have their own ip addresses and acting like virtual machines, and you have to enable promiscuous option on host and router. on host: sudo ip link set <lan name> promisc and in virtual box and NO DHCP
+    driver: macvlan
+    # parent=your lan name
+  lab-ipvlan-network: # like macvlan, but they allow to host to share their mac address for all ip address
+    driver: ipvlan
+  lab-ipvlan-l3-network: # use level 3 network instead of 2 and use host as router and no broadcast traffic, and you have to use static network
+    driver: ipvlan
+    #ipvlan_mode: l3
+  lab-none-network: # fully isolated network
+
+
+services:
+  # MySQL ------------------------------------------------------------------------------
+  mysql-service:
+    image: "mysql:8.0.32-oracle"
+    container_name: "mysql-container"
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    env_file:
+      - mysql/MySQL.env
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-volume:/var/lib/mysql # persist data even if container shuts down
+    networks:
+      - lab-bridge-network
+    healthcheck:
+      test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Postgres -----------------------------------------------------------------------------
+  postgres-service:
+    image: "postgres:15.2-alpine3.17" # use 15.2 official postgres version on latest version of alpine linux
+    container_name: "postgres-container"
+    env_file:
+      - postgres/Postgres.env # See all the environment variables of postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-volume:/var/lib/postgresql/data/ # persist data even if container shuts down
+#    networks:
+#      - lab-bridge-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------------------
+
+
+
