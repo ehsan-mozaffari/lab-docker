@@ -9,7 +9,7 @@ networks: # defining user defined network adds DNS by name of the service resolv
   bridge-network:
     driver: bridge
   host-network: # Directly connected to host network and no need to expose ports. Useful for VPN: Wire guard or Kamailio
-    driver: host # driver means network type
+    driver: host # driver means network type. you can not have 2nd host driver network as Docker by default has one created already. Thus you would need just to use it instead of creating new network. Just add: network_mode: host under your container
   macvlan-network: # Directly connected to router and have their own ip addresses and acting like virtual machines, and you have to enable promiscuous option on host and router. on host: sudo ip link set <lan name> promisc and in virtual box and NO DHCP
     driver: macvlan
     # parent=your lan name
