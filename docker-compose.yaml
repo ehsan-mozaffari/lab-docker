@@ -5,6 +5,7 @@ volumes: # named volumes can be managed easier using docker-compose
   mysql-volume:
   postgres-volume:
 
+# Read it carefully https://docs.docker.com/compose/compose-file/compose-file-v3/#network_mode
 networks: # defining user defined network adds DNS by name of the service resolver for your services
   bridge-network:
     driver: bridge
