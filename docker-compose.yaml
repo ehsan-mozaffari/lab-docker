@@ -2,6 +2,7 @@ version: '3.9'
 
 volumes: # named volumes can be managed easier using docker-compose
   kafka-volume:
+    external: false # docker expected to already exist if true
   mysql-volume:
   postgres-volume:
 
@@ -127,3 +128,21 @@ services:
     depends_on:
       kafka-service:
         condition: service_healthy
+
+  # Ant Media Service ------------------------------------------------------------------------
+  ant-media-service:
+    image: "nibrev/ant-media-server:ams-v2.5.3"
+    container_name: "ant-media-container"
+    restart: always #it will be restart even after restarting os or docker
+    # restart after enable ssl and use 5443 port to access <https://yourdomain:5443>
+    command:
+      - /bin/bash
+      - -c
+      - |
+        ./usr/local/antmedia/enable_ssl.sh <yourdomain>
+    volumes:
+      - ant-media-volume:/usr/local/antmedia/ # persist data even if container shuts down
+    network_mode: host # Because of the nat issue you have to use host mode
+    # above means that Ant Media Server uses the host network. It is required because
+    # there is a wide range of UDP and TCP ports are being used for WebRTC streaming.
+    #This also means that you can only use one pod of Ant Media Server in a host instance.
