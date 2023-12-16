@@ -1,4 +1,6 @@
-version: '3.9'
+# The default path for a Compose file is compose.yaml (preferred) 
+
+# version: '3.8' # It is ignored and stays for backward compability
 
 volumes: # named volumes can be managed easier using docker-compose
   kafka-volume:

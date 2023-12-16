@@ -1,0 +1,11 @@
+services:
+  ubuntu_desktop_lxqt-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: "ubuntu_desktop_lxqt:local"
+    container_name: "ubuntu_desktop_lxqt-container"
+    env_file:
+      - ./Ubuntu.env
+    ports:
+      - "3389:3389"
