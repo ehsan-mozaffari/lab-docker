@@ -1,0 +1,18 @@
+services:
+  certbot-service:
+    image: certbot-alpine
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: certbot-container
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - certbot-etc-letsencrypt-volume:/etc/letsencrypt
+    command: 
+      - certbot certonly --non-interactive --no-eff-email --agree-tos --webroot --webroot-path=${CERTBOT_WEBROOT_PATH} --email ${CERTBOT_EMAIL} --domain ${CERTBOT_DOMAIN} --domain *.${CERTBOT_DOMAIN}
+    entrypoint: "/bin/ash -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+
+volumes:
+  certbot-etc-letsencrypt-volume:
