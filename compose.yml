@@ -23,53 +23,59 @@ networks: # defining user defined network adds DNS by name of the service resolv
     driver: ipvlan
     #ipvlan_mode: l3
   none-network: # fully isolated network
+    driver: none
+  # prod defining network ideas
+  internal-network:
+    driver_opts:
+      com.docker.network.expose.ports: "false"
+  external-network:
+    driver_opts:
+      com.docker.network.expose.ports: "true"
+  no-network:
+    driver: none
 
 
 services:
-  # MySQL ------------------------------------------------------------------------------
-  mysql-service:
-    image: "mysql:8.0.32-oracle"
-    container_name: "mysql-container"
-    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
-    env_file:
-      - mysql/MySQL.env
-    ports:
-      - "3306:3306"
-    volumes:
-      - mysql-volume:/var/lib/mysql # persist data even if container shuts down
+
+
+  mysql:
+    extends:
+      service: mysql-service
+      file: mysql/compose.yml
+    env_file: .env
     networks:
-      - bridge-network
-    healthcheck:
-      test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - internal-network
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
 
-  # Postgres -----------------------------------------------------------------------------
-  postgres-service:
-    image: "postgres:15.2-alpine3.17" # use 15.2 official postgres version on latest version of alpine linux
-    container_name: "postgres-container"
-    env_file:
-      - postgres/Postgres.env # See all the environment variables of postgres
+
+  
+  postgres:
+    extends:
+      service: postgres-service
+      file: postgres/compose.yml
+    env_file: .env
+    networks:
+      - internal-network
+
+
+
+  wordpress:
+    extends:
+      service: wordpress-service
+      file: wordpress/compose.yml
+    depends_on:
+      mysql:
+        condition: service_healthy
     ports:
-      - "5432:5432"
-    volumes:
-      - postgres-volume:/var/lib/postgresql/data/ # persist data even if container shuts down
-#    networks:
-#      - bridge-network
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - "80:80"
+      - "443:443"
+    env_file: .env
+    networks:
+      - internal-network
+      - external-network
 
-#    volumes:
-#      - type: bind
-#        source: ./config
-#        target: /etc/nginx
-#        consistency: consistent
 
-  # Kafka -----------------------------------------------------------------------------
+  
   kafka-service:
     image: "bitnami/kafka:3.4.0-debian-11-r20"
     container_name: "kafka-container"
