@@ -67,7 +67,7 @@ services:
       mysql:
         condition: service_healthy
     ports:
-      - "80:80"
+      - "80:80" # Needed for certbot first time
       - "443:443"
     env_file: .env
     networks:
@@ -75,6 +75,7 @@ services:
       - external-network
 
 
+  # FIXME: Fix the rest by following above
   
   kafka-service:
     image: "bitnami/kafka:3.4.0-debian-11-r20"
